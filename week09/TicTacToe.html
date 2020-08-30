@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TicTocToe</title>
+	<meta charset="utf-8">
+</head>
+<style>
+    .cell {
+        width: 100px;
+        height: 100px;
+        background-color: green;
+        display: inline-block;
+        vertical-align: middle;
+        border: solid 1px white;
+        line-height: 100px;
+        font-size: 50px;
+        text-align: center;
+    }
+</style>
+<body>
+<div id="board">
+
+</div>
+</body>
+<script>
+  let pattern = [
+    [0, 2, 0],
+    [0, 1, 0],
+    [0, 0, 0]
+  ]
+
+  let color = 1
+
+  /**
+   * 1. 获取棋盘元素
+   * 2. 对棋格进行绘制
+   *    2.1 遍历patter数组，每个棋格用一个div表示。
+   */
+  function show() {
+    let board = document.getElementById("board");
+    board.innerHTML = ""
+    for (let i = 0; i < pattern.length; i++) {
+      for (let j = 0; j < pattern[i].length; j++) {
+        let cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.innerHTML =
+          pattern[i][j] == 2 ? "&#10060;": //cross
+          pattern[i][j] == 1 ? "&#11093;" :"" // circle
+        cell.addEventListener("click", () => userMove(i, j))
+        board.appendChild(cell)
+      }
+      board.appendChild(document.createElement("br"))
+    }
+  }
+
+  function userMove(x, y) {
+    pattern[x][y] = color;
+    if(check(pattern, color)) {
+      winAlert(color, " wins!")
+    }
+    color = 3 - color;
+    show();
+    if(willWin(pattern, color)) {
+      winAlert(color, " will win!")
+    }
+    computerMove()
+  }
+
+  function computerMove() {
+    let choice = bestChoice(pattern, color);
+    if(choice.point) {
+      pattern[choice.point[0]][choice.point[1]] = color;
+      if(check(pattern, color)) {
+        winAlert(color, " wins!")
+      }
+      color = 3 - color;
+      show();
+    }
+  }
+
+
+
+
+  function  clone(pattern) {
+    return JSON.parse(JSON.stringify(pattern))
+  }
+
+  function willWin(pattern, color) {
+    for(let i =0; i < pattern.length; i++) {
+      for(let j = 0; j < pattern[i].length; j++) {
+        if(pattern[i][j]) {
+          continue
+        }
+        let tmp = clone(pattern);
+        tmp[i][j] = color;
+        if(check(tmp, color)) {
+          return [i, j]
+        }
+      }
+    }
+    return null
+  }
+
+  function bestChoice(pattern, color) {
+    let p = willWin(pattern, color);
+    if(p) {
+      return {
+        point: p,
+        result: 1
+      }
+    }
+    let result = -2;
+    let point = null;
+    for(let i = 0; i < pattern.length; i++) {
+      for(let j = 0; j < pattern[i].length; j++) {
+        if(pattern[i][j]) {
+          continue
+        }
+        let tmp = clone(pattern)
+        tmp[i][j] = color
+        let r = bestChoice(tmp, 3 - color).result
+        if(-r > result) {
+          result = -r
+          point = [i, j]
+        }
+      }
+    }
+    return {
+      point: point,
+      result: point ? result: 0
+    }
+  }
+
+  function winAlert(color, msg) {
+    window.setTimeout(function(){alert(color === 2 ? "❌ " + msg: "🟠 " + msg)}, 100)
+  }
+
+  function check(pattern, color) {
+    for(let i = 0; i < pattern.length; i++) {
+      let win = true;
+      for(let j = 0; j < pattern[i].length; j++) {
+        if(pattern[i][j] !== color)  {
+          win = false;
+        }
+      }
+      if(win) {
+        return true
+      }
+    }
+
+    for(let i = 0; i < pattern.length; i++) {
+      let win = true;
+      for(let j = 0; j < pattern[i].length; j++) {
+        if(pattern[j][i] !== color)  {
+          win = false;
+        }
+      }
+      if(win) {
+        return true
+      }
+    }
+
+    {
+      let win = true;
+      for(let i = 0; i < pattern.length; i++) {
+        if(pattern[i][i] !== color) {
+          win = false
+        }
+      }
+      if(win) {
+        return true
+      }
+    }
+
+    {
+      let win = true
+      let len = pattern.length;
+      for(let i = 0; i < len; i++) {
+        if(pattern[i][len - 1 - i] !== color) {
+          win = false
+        }
+      }
+      if(win) {
+        return true
+      }
+    }
+    return false
+  }
+
+  show()
+    console.log(bestChoice(pattern, color))
+</script>
+</html>
